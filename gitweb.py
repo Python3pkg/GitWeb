@@ -83,7 +83,7 @@ class GitRepository(object):
                 r'git %s --stateless-rpc --advertise-refs "%s"' % (git_command[4:], self.content_path),
                 starting_values = [ str(hex(len(smart_server_advert)+4)[2:].rjust(4,'0') + smart_server_advert + '0000') ]
                 )
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             log.exception(e)
             raise exc.HTTPExpectationFailed()
         resp = Response()
@@ -112,13 +112,13 @@ class GitRepository(object):
                 r'git %s --stateless-rpc "%s"' % (git_command[4:], self.content_path),
                 inputstream = inputstream
                 )
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             log.exception(e)
             raise exc.HTTPExpectationFailed()
 
-        if git_command in [u'git-receive-pack']:
+        if git_command in ['git-receive-pack']:
             # updating refs manually after each push. Needed for pre-1.7.0.4 git clients using regular HTTP mode.
-            subprocess.call(u'git --git-dir "%s" update-server-info' % self.content_path, shell=True)
+            subprocess.call('git --git-dir "%s" update-server-info' % self.content_path, shell=True)
 
         resp = Response()
         resp.content_type = 'application/x-%s-result' % git_command.encode('utf8')
@@ -135,14 +135,14 @@ class GitRepository(object):
 
         try:
             resp = app(request, environ)
-        except exc.HTTPException, e:
+        except exc.HTTPException as e:
             resp = e
             log.exception(e)
-        except Exception, e:
+        except Exception as e:
             log.exception(e)
             resp = exc.HTTPInternalServerError()
 
-        start_response(resp.status, resp.headers.items())
+        start_response(resp.status, list(resp.headers.items()))
         return resp.app_iter
 
 class GitDirectory(object):
@@ -185,9 +185,9 @@ class GitDirectory(object):
                 if self.auto_create and 'application/x-git-receive-pack-result' in request.accept:
                     try:
                         self.pre_clone_hook(content_path, request)
-                        subprocess.call(u'git init --quiet --bare "%s"' % content_path, shell=True)
+                        subprocess.call('git init --quiet --bare "%s"' % content_path, shell=True)
                         self.post_clone_hook(content_path, request)
-                    except exc.HTTPException, e:
+                    except exc.HTTPException as e:
                         return e(environ, start_response)
                     app = self.repository_app(content_path)
                 else:

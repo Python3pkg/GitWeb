@@ -43,7 +43,7 @@ class StreamFeeder(threading.Thread):
         if type(source) in (type(''),bytes,bytearray): # string-like
             self.bytes = bytes(source)
         else: # can be either file pointer or file-like
-            if type(source) in (int, long): # file pointer it is
+            if type(source) in (int, int): # file pointer it is
                 ## converting file descriptor (int) stdin into file-like
                 try:
                     source = os.fdopen(source, 'rb', 16384)
@@ -168,7 +168,7 @@ class BufferedGenerator():
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         while not len(self.data) and not self.worker.EOF.is_set():
             self.worker.data_added.clear()
             self.worker.data_added.wait(0.2)
@@ -366,10 +366,10 @@ class SubprocessIOChunker():
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if self.process.poll():
             raise EnvironmentError("Subprocess exited due to an error:\n" + ''.join(self.error))
-        return self.output.next()
+        return next(self.output)
 
     def throw(self, type, value=None, traceback=None):
         if self.output.length or not self.output.done_reading:
